@@ -10,7 +10,7 @@ import { AuthProvider } from "./context/AuthContext";
 // --- COMPOSANTS DE CONTRÔLE D'ACCÈS ---
 import ProtectedRoutes from "./components/Auth/ProtectedRoute";
 import PublicRoute from "./components/Auth/PublicRoute";
-import LayoutWrapper from "./Layout/LayoutWrapper";
+import LayoutWrapper from "./layout/LayoutWrapper"; // Vérifiez que le dossier est 'Layout' et le fichier 'LayoutWrapper.jsx'
 import NotFound from "./pages/spécial/NotFound";
 
 // --- PAGES ---
