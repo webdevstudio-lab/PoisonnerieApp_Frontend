@@ -27,7 +27,11 @@ export const API_PATHS = {
 
   STORES: {
     GET_ALL: "/stores", // retourne tous les stocks
-    GET_ONE: "/stores/:id", // retourne un stock par son ID
+    GET_ONE: "/stores/:id", // retourne un stock par son ID (Dépôt)
+
+    // Nouvelle route pour récupérer le stock d'une boutique (SalePoint)
+    GET_BY_SALEPOINT: "/stores/by-salepoint/:salePointId",
+
     UPDATE_ONE: "/stores/:id", // met à jour un stock par son ID
     DELETE_ONE: "/stores/:id", // supprime un stock par son ID
     ADD_ONE: "/stores", // ajoute un stock
@@ -105,5 +109,36 @@ export const API_PATHS = {
   STOCK_HISTORY: {
     GET_ALL: "/stock-history",
     GET_ONE: "/stock-history/:id",
+  },
+
+  // --- GESTION DE LA CAISSE GÉNÉRALE (PORTEFEUILLE GÉRANT) ---
+  CAISSE: {
+    // Si ton serveur utilise app.use("/api/caisse", caisseRouter)
+    GET_SOLDE: "/caisse", // Appellera /api/caisse/
+    GET_HISTORIQUE: "/caisse/historique", // Appellera /api/caisse/historique
+    VERSEMENT: "/caisse/versement", // Appellera /api/caisse/versement
+    RETRAIT: "/caisse/retrait", // Appellera /api/caisse/retrait
+  },
+
+  // --- GESTION DES VENTES JOURNALIÈRES ---
+  VENTE_JOUR: {
+    ADD: "/ventes", // Sera concaténé en /api/ventes/
+    GET_BY_STORE: "/ventes/store/:storeId",
+    GET_BY_POINT: "/ventes/point/:salePointId",
+    UPDATE: "/ventes/:id",
+    DELETE: "/ventes/:id",
+    STATS_VENTE: "/ventes/stats/:salePointId",
+  },
+
+  VERSEMENTS: {
+    GET_ALL: "/versements",
+    GET_ONE: "/versements/:id",
+    CREATE: "/versements",
+    UPDATE: "/versements/:id",
+    DELETE: "/versements/:id",
+  },
+
+  DASHBOARD: {
+    GET_STATS: "/dashboard/stats", // Appellera GET /api/dashboard/stats
   },
 };

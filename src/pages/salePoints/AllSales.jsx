@@ -8,6 +8,7 @@ import {
   Edit3,
   RefreshCcw,
   Wallet,
+  TrendingUp,
 } from "lucide-react";
 import API from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
@@ -119,6 +120,7 @@ const AllSales = () => {
               onClick={() => navigate(`/salesPoints/${sale._id}`)}
               className="bg-white rounded-[40px] border border-white p-7 shadow-sm hover:shadow-xl transition-all group relative cursor-pointer active:scale-[0.98]"
             >
+              {/* Actions & Logo */}
               <div className="flex justify-between items-start mb-6">
                 <div className="w-14 h-14 bg-blue-50 text-[#3498DB] rounded-2xl flex items-center justify-center group-hover:bg-[#3498DB] group-hover:text-white transition-colors">
                   <Store size={28} />
@@ -145,6 +147,7 @@ const AllSales = () => {
                 </div>
               </div>
 
+              {/* Titre & Localisation */}
               <h3 className="text-xl font-black text-[#202042] mb-1 capitalize leading-tight">
                 {sale.name}
               </h3>
@@ -154,26 +157,43 @@ const AllSales = () => {
                 {sale.location || "Localisation non spécifiée"}
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50/80 rounded-[25px]">
-                <div>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
-                    Dette
+              {/* STATS GRID - 3 COLONNES */}
+              <div className="grid grid-cols-3 gap-2 p-4 bg-slate-50/80 rounded-[25px]">
+                {/* SOLDE ACTUEL */}
+                <div className="flex flex-col justify-center">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Solde
                   </p>
-                  <div className="flex items-center gap-2 text-rose-500 font-black">
-                    <Wallet size={14} />
-                    <span className="text-sm">
-                      {sale.dette?.toLocaleString()} F
+                  <div className="flex items-center gap-1.5 text-[#2ECC71] font-black">
+                    <TrendingUp size={12} />
+                    <span className="text-[12px]">
+                      {sale.solde?.toLocaleString() || 0} F
                     </span>
                   </div>
                 </div>
-                <div className="border-l border-slate-200 pl-4">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+
+                {/* DETTE (Centré avec bordures) */}
+                <div className="flex flex-col justify-center border-x border-slate-200 px-2">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                    Dette
+                  </p>
+                  <div className="flex items-center gap-1.5 text-rose-500 font-black">
+                    <Wallet size={12} />
+                    <span className="text-[12px]">
+                      {sale.dette?.toLocaleString() || 0} F
+                    </span>
+                  </div>
+                </div>
+
+                {/* STOCK */}
+                <div className="flex flex-col justify-center pl-2">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">
                     Stocks
                   </p>
-                  <p className="text-sm font-black text-[#202042]">
+                  <p className="text-[12px] font-black text-[#202042]">
                     {sale.displayStock?.length || 0}{" "}
-                    <span className="text-[10px] text-slate-400 uppercase">
-                      Variétés
+                    <span className="text-[8px] text-slate-400 uppercase">
+                      Var.
                     </span>
                   </p>
                 </div>

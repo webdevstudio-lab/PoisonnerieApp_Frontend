@@ -1,30 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LogoutModal from "./LogoutModal";
 import ProfileDropdown from "./ProfileDropdown";
-import API from "../utils/axiosInstance";
-import { API_PATHS } from "../utils/apiPaths";
 
 import {
+  LayoutDashboard,
+  Store,
+  Ship,
   Briefcase,
-  Users,
+  Box,
+  UserCheck,
+  TrendingDown,
+  Wallet,
+  History,
+  Settings,
   LogOut,
   Menu,
-  Archive,
-  X,
-  LayoutDashboard,
-  Settings,
-  User,
-  Ship,
   Search,
   Bell,
-  Wallet,
   Waves,
 } from "lucide-react";
 
 const DashboardLayout = ({ children, activeMenu }) => {
-  const { logout, user } = useAuth();
+  const { logout, user } = useAuth(); // 'user' contient les données de ton localStorage
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,12 +31,17 @@ const DashboardLayout = ({ children, activeMenu }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [companyName, setCompanyName] = useState("");
 
-  const activeNavItem =
-    activeMenu || location.pathname.split("/")[1] || "dashboard";
+  // Vérification du rôle
+  const isAdmin = user?.user.role === "admin";
+  const currentPath = location.pathname.split("/")[1] || "dashboard";
+  const activeNavItem = activeMenu || currentPath;
 
-  // Gestion du responsive
+  // PROTECTION DE ROUTE : Si pas admin et tente d'accéder à autre chose que salesPoints
+  if (!isAdmin && currentPath !== "salesPoints") {
+    return <Navigate to="/salesPoints" replace />;
+  }
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
@@ -49,49 +53,66 @@ const DashboardLayout = ({ children, activeMenu }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Menu complet sans restriction de rôles
-  const menuItems = [
-    { id: "dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-    { id: "salesPoints", label: "Points de vente", icon: User },
-    { id: "store", label: "Mon stocks", icon: Ship },
-    { id: "suppliers", label: "Mes fournisseurs", icon: Wallet },
-    { id: "products", label: "Mes produits", icon: Wallet },
-    { id: "clients", label: "Mes clients", icon: Users },
-    { id: "users", label: "Mon Équipe", icon: Users },
-    { id: "depenses", label: "Dépenses", icon: Briefcase },
-    { id: "archive", label: "Archives", icon: Archive },
-    { id: "settings", label: "Paramètres", icon: Settings },
+  // Liste complète des menus
+  const allMenuItems = [
+    {
+      id: "dashboard",
+      label: "Tableau de bord",
+      icon: LayoutDashboard,
+      adminOnly: true,
+    },
+    {
+      id: "salesPoints",
+      label: "Points de vente",
+      icon: Store,
+      adminOnly: false,
+    },
+    { id: "store", label: "Gestion Stocks", icon: Ship, adminOnly: true },
+    {
+      id: "suppliers",
+      label: "Fournisseurs",
+      icon: Briefcase,
+      adminOnly: true,
+    },
+    { id: "products", label: "Catalogue Produits", icon: Box, adminOnly: true },
+    { id: "users", label: "Équipe & Staff", icon: UserCheck, adminOnly: true },
+    {
+      id: "depenses",
+      label: "Mes Dépenses",
+      icon: TrendingDown,
+      adminOnly: true,
+    },
+    { id: "caisse", label: "Ma Caisse", icon: Wallet, adminOnly: true },
+    { id: "archive", label: "Archives", icon: History, adminOnly: true },
+    { id: "settings", label: "Paramètres", icon: Settings, adminOnly: true },
   ];
+
+  // FILTRAGE : On ne garde que les items autorisés
+  const menuItems = allMenuItems.filter((item) => isAdmin || !item.adminOnly);
 
   return (
     <div className="flex h-screen bg-[#F0F7FF] font-body overflow-hidden text-[#202042]">
-      {/* SIDEBAR MOBILE OVERLAY */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-[#202042]/20 z-40 backdrop-blur-md transition-opacity"
+          className="fixed inset-0 bg-[#202042]/40 z-40 backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* SIDEBAR DYNAMIQUE */}
       <aside
-        className={`fixed lg:relative inset-y-0 left-0 z-50 w-80 p-4 transform transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-          isMobile && !sidebarOpen ? "-translate-x-full" : "translate-x-0"
-        }`}
+        className={`fixed lg:relative inset-y-0 left-0 z-50 w-72 p-4 transform transition-transform duration-500 ${isMobile && !sidebarOpen ? "-translate-x-full" : "translate-x-0"}`}
       >
-        <div className="flex flex-col h-full bg-[#202042] rounded-[45px] shadow-[0_20px_50px_rgba(0,53,94,0.15)] overflow-hidden">
-          {/* LOGO */}
+        <div className="flex flex-col h-full bg-[#202042] rounded-[40px] shadow-2xl overflow-hidden border border-white/5">
           <div className="p-8 flex flex-col items-center">
-            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-lg">
-              <Waves className="text-[#3498DB]" size={30} />
+            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mb-3 shadow-lg">
+              <Waves className="text-[#3498DB]" size={28} />
             </div>
-            <h1 className="text-xl font-black tracking-tighter text-white uppercase text-center">
+            <h1 className="text-lg font-black tracking-tighter text-white uppercase">
               Océan<span className="text-[#3498DB]">Gestion</span>
             </h1>
           </div>
 
-          {/* NAVIGATION (Affiche tout par défaut) */}
-          <nav className="flex-1 px-6 py-4 space-y-2 overflow-y-auto custom-scrollbar">
+          <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto custom-scrollbar">
             {menuItems.map((item) => {
               const isActive = activeNavItem === item.id;
               return (
@@ -101,69 +122,61 @@ const DashboardLayout = ({ children, activeMenu }) => {
                     navigate(`/${item.id}`);
                     if (isMobile) setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-[22px] transition-all duration-300 group ${
+                  className={`w-full flex items-center gap-3.5 px-5 py-3.5 rounded-[22px] transition-all duration-300 group ${
                     isActive
                       ? "bg-white text-[#202042] shadow-xl translate-x-1"
-                      : "text-blue-100/60 hover:text-white hover:bg-white/5"
+                      : "text-blue-100/50 hover:text-white hover:bg-white/5"
                   }`}
                 >
                   <item.icon
-                    size={20}
+                    size={18}
                     className={`${isActive ? "text-[#3498DB]" : "opacity-50 group-hover:opacity-100"}`}
                   />
-                  <span className="text-sm tracking-wide font-bold">
+                  <span className="text-[12.5px] tracking-wide font-bold">
                     {item.label}
                   </span>
                   {isActive && (
-                    <div className="ml-auto w-1.5 h-1.5 bg-[#3498DB] rounded-full shadow-[0_0_10px_#3498DB]"></div>
+                    <div className="ml-auto w-1.5 h-1.5 bg-[#3498DB] rounded-full shadow-[0_0_8px_#3498DB]"></div>
                   )}
                 </button>
               );
             })}
           </nav>
 
-          {/* DÉCONNEXION */}
-          <div className="p-8">
+          <div className="p-6">
             <button
               onClick={() => setShowLogoutModal(true)}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-[22px] transition-all font-black text-[11px] uppercase tracking-widest group"
+              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-500/10 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-[24px] transition-all font-black text-[10px] uppercase tracking-widest"
             >
-              <LogOut
-                size={18}
-                className="group-hover:-translate-x-1 transition-transform"
-              />
-              Déconnexion
+              <LogOut size={16} /> Déconnexion
             </button>
           </div>
         </div>
       </aside>
 
-      {/* ZONE DE CONTENU PRINCIPALE */}
       <div className="flex-1 flex flex-col min-w-0 p-4">
-        <header className="h-24 bg-white/60 backdrop-blur-xl rounded-[35px] shadow-[0_10px_40px_rgba(0,0,0,0.02)] border border-white flex items-center justify-between px-8 mb-4">
-          <div className="flex items-center gap-5">
+        <header className="h-20 bg-white/70 backdrop-blur-md rounded-[30px] shadow-sm border border-white flex items-center justify-between px-8 mb-4">
+          <div className="flex items-center gap-4">
             {isMobile && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-3 bg-white text-[#202042] rounded-2xl shadow-sm border border-blue-50"
+                className="p-2.5 bg-white text-[#202042] rounded-xl shadow-sm border border-slate-100"
               >
-                <Menu size={24} />
+                <Menu size={20} />
               </button>
             )}
             <div>
-              <h2 className="text-xl font-black text-[#202042]">
+              <h2 className="text-lg font-black text-[#202042]">
                 Salut,{" "}
                 <span className="text-[#3498DB] capitalize">
-                  {/* Récupération dynamique du nom depuis le AuthContext */}
-                  {user?.user.name || "Capitaine"}
+                  {user?.name || "Capitaine"}
                 </span>{" "}
                 👋
               </h2>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                  {/* Récupération dynamique du rôle (ex: admin) */}
-                  Session {user?.user.role || "Utilisateur"} •{" "}
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                  {user?.role} •{" "}
                   {new Date().toLocaleDateString("fr-FR", {
                     weekday: "long",
                     day: "numeric",
@@ -174,28 +187,27 @@ const DashboardLayout = ({ children, activeMenu }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <div className="hidden md:flex relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 size-4" />
               <input
                 type="text"
                 placeholder="Rechercher..."
-                className="bg-[#F8FAFC] border-none rounded-[18px] py-3 pl-11 pr-4 text-xs font-bold outline-none transition-all w-64 focus:ring-4 focus:ring-blue-50 focus:bg-white"
+                className="bg-slate-50 border-none rounded-2xl py-2.5 pl-11 pr-4 text-[11px] font-bold outline-none w-56"
               />
             </div>
-
-            <div className="flex items-center gap-3 bg-[#F8FAFC] p-1.5 rounded-2xl border border-blue-50">
-              <button className="relative p-2.5 text-slate-400 hover:text-[#3498DB] transition-colors bg-white rounded-xl shadow-sm">
+            <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-2xl">
+              <button className="relative p-2 text-slate-400 hover:text-[#3498DB] bg-white rounded-xl shadow-sm border border-slate-50">
                 <Bell size={18} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
               </button>
               <ProfileDropdown />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto z-0 custom-scrollbar bg-white/40 backdrop-blur-sm rounded-[40px] border border-white/50 shadow-inner">
-          <div className="p-8 lg:p-12 max-w-[1600px] mx-auto animate-fadeIn">
+        <main className="flex-1 overflow-y-auto custom-scrollbar bg-white/40 backdrop-blur-sm rounded-[35px] border border-white/50 shadow-inner">
+          <div className="p-6 lg:p-10 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             {children}
           </div>
         </main>

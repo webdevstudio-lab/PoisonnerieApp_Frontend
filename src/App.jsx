@@ -23,6 +23,10 @@ import Dashboard from "./pages/dashboard/Dashboard";
 // Utilisateurs & Clients
 import AllUsers from "./pages/users/AllUsers";
 
+// Clients
+import AllClient from "./pages/clients/AllClient";
+import ClientDetails from "./pages/clients/ClientDetails";
+
 // Points de vente
 import AllSales from "./pages/salePoints/AllSales";
 import SalesDetails from "./pages/salePoints/salesDetails";
@@ -44,6 +48,9 @@ import Archive from "./pages/archive/Archive";
 
 //Depenses
 import Depenses from "./pages/depenses/Depenses";
+
+//Caisse
+import Caisse from "./pages/caisse/Caisse";
 
 // Utilitaires
 
@@ -91,6 +98,13 @@ const App = () => {
 
               {/* Utilisateurs */}
               <Route path="/users" element={<AllUsers />} />
+
+              {/* Clients */}
+              <Route path="/clients" element={<AllClient />} />
+              <Route path="/clients/:id" element={<ClientDetails />} />
+
+              {/* Caisse */}
+              <Route path="/caisse" element={<Caisse />} />
 
               {/* Archives */}
               <Route path="/archive" element={<Archive />} />

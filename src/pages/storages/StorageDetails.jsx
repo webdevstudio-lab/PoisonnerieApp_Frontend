@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { createPortal } from "react-dom"; // Import indispensable pour le Portal
+import { createPortal } from "react-dom";
 import { RefreshCcw } from "lucide-react";
 import API from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
-// Imports des composants mis à jour
 import StockTable from "./externals/StockTable";
 import TransferModal from "./externals/TransferModal";
 import LossModal from "./externals/LossModal";
@@ -20,6 +19,7 @@ const StorageDetails = () => {
   const fetchStoreDetails = async () => {
     try {
       setLoading(true);
+      // On s'assure que le backend peuple (populate) bien les détails du produit pour avoir le purchasePrice
       const res = await API.get(API_PATHS.STORES.GET_ONE.replace(":id", id));
       if (res.data.success) setStore(res.data.data);
     } catch (err) {
@@ -33,6 +33,21 @@ const StorageDetails = () => {
     fetchStoreDetails();
   }, [id]);
 
+  /**
+   * CALCUL DE LA VALEUR TOTALE DU STOCK (PRIX D'ACHAT)
+   * useMemo permet de ne pas recalculer si le store ne change pas.
+   */
+  const totalPurchaseValue = useMemo(() => {
+    if (!store || !store.items) return 0;
+
+    return store.items.reduce((acc, item) => {
+      // On récupère le prix d'achat depuis l'objet produit peuplé
+      const price = item.product?.purchasePrice || 0;
+      const quantity = item.quantityCartons || 0;
+      return acc + price * quantity;
+    }, 0);
+  }, [store]);
+
   if (loading)
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4">
@@ -45,14 +60,16 @@ const StorageDetails = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
-      {/* 1. HEADER : Contient maintenant le titre, les actions ET les KPIs financiers */}
+      {/* On passe totalPurchaseValue au Header pour qu'il puisse 
+         l'afficher dans les KPIs financiers 
+      */}
       <StorageHeader
         store={store}
+        totalValue={totalPurchaseValue}
         onTransfer={() => setActiveModal("transfer")}
         onLoss={() => setActiveModal("loss")}
       />
 
-      {/* 2. TABLEAU D'INVENTAIRE : Juste en dessous du header */}
       <div className="grid grid-cols-1 gap-6">
         <StockTable
           items={store?.items || []}
@@ -60,17 +77,15 @@ const StorageDetails = () => {
         />
       </div>
 
-      {/* --- 3. SYSTEME DE MODALS (Via React Portal) --- */}
+      {/* --- SYSTEME DE MODALS (Portal) --- */}
       {activeModal &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            {/* Background sombre et flou */}
             <div
               className="fixed inset-0 bg-[#202042]/60 backdrop-blur-sm animate-in fade-in duration-300"
               onClick={() => setActiveModal(null)}
             />
 
-            {/* Conteneur du Modal */}
             <div className="relative w-full max-w-lg z-10 animate-in zoom-in-95 duration-200">
               {activeModal === "transfer" && (
                 <TransferModal
@@ -88,7 +103,7 @@ const StorageDetails = () => {
               )}
             </div>
           </div>,
-          document.body, // Rendu direct dans le body
+          document.body,
         )}
     </div>
   );
