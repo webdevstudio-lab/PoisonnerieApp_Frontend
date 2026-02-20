@@ -138,6 +138,18 @@ export const API_PATHS = {
     DELETE: "/versements/:id",
   },
 
+  CLIENTS: {
+    BASE: "/clients",
+    GET_ALL: "/clients",
+    GET_ONE: "/clients/:id",
+    CREATE: "/clients",
+    UPDATE: "/clients/:id",
+    DELETE: "/clients/:id",
+
+    // Gestion Financière
+    RECORD_PAYMENT: "/clients/payment",
+  },
+
   DASHBOARD: {
     GET_STATS: "/dashboard/stats", // Appellera GET /api/dashboard/stats
   },

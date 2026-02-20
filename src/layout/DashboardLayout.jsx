@@ -20,6 +20,7 @@ import {
   Search,
   Bell,
   Waves,
+  Users,
 } from "lucide-react";
 
 const DashboardLayout = ({ children, activeMenu }) => {
@@ -82,6 +83,7 @@ const DashboardLayout = ({ children, activeMenu }) => {
       icon: TrendingDown,
       adminOnly: true,
     },
+    { id: "clients", label: "Clients", icon: Users, adminOnly: true },
     { id: "caisse", label: "Ma Caisse", icon: Wallet, adminOnly: true },
     { id: "archive", label: "Archives", icon: History, adminOnly: true },
     { id: "settings", label: "Paramètres", icon: Settings, adminOnly: true },
