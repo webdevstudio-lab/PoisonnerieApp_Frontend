@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Plus,
   LayoutDashboard,
   ShoppingBag,
-  Receipt,
+  Users,
+  Wallet,
+  Loader2,
 } from "lucide-react";
 import API from "../../utils/axiosInstance";
 import { API_PATHS } from "../../utils/apiPaths";
 
+// Imports des composants externes
 import SalesStats from "./externals/SalesStats";
 import TopProducts from "./externals/TopProducts";
 import StockMovement from "./externals/StockMovement";
@@ -17,29 +21,27 @@ import FinancialSummary from "./externals/FinancialSummary";
 import SaleModal from "./externals/SaleModal";
 import VenteDetails from "./externals/VenteDetails";
 import VersementDetail from "./externals/VersementDetail";
+import VersementClientList from "./externals/VersementClientList";
+import AddVersementClient from "./externals/AddVersementClient";
 
 const SalesDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  // --- GESTION DES ONGLETS VIA URL ---
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "dashboard";
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Clé pour forcer le rafraîchissement des composants enfants (Stats, etc.)
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isVersementModalOpen, setIsVersementModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchDetails = useCallback(async () => {
     try {
-      // Pas de setLoading(true) ici pour éviter le flash blanc lors d'un refresh après vente
       const res = await API.get(API_PATHS.SALES.GET_ONE.replace(":id", id));
       if (res.data.success) {
         setData(res.data.data);
-        // On incrémente la clé pour notifier les composants comme SalesStats de recharger
         setRefreshKey((prev) => prev + 1);
       }
     } catch (err) {
@@ -57,114 +59,148 @@ const SalesDetails = () => {
     setSearchParams({ tab: tabName });
   };
 
+  const openPaymentModal = (client) => {
+    setSelectedClient(client);
+    setIsVersementModalOpen(true);
+  };
+
   if (loading)
     return (
-      <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 border-4 border-slate-200 border-t-[#3498DB] rounded-full animate-spin"></div>
-        <p className="font-black text-slate-400 uppercase tracking-widest text-xs">
-          Chargement du point de vente...
+      <div className="fixed inset-0 bg-slate-50/50 flex flex-col items-center justify-center gap-4 z-50">
+        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+        <p className="font-black text-slate-400 uppercase tracking-widest text-[10px]">
+          Chargement boutique...
         </p>
       </div>
     );
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-[1600px] mx-auto space-y-4 lg:space-y-8 pb-24 px-4 lg:px-8 animate-in fade-in duration-500">
+      {/* Header : Navigation & Actions - Adapté Mobile */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/60 p-4 lg:p-5 rounded-[25px] lg:rounded-[35px] backdrop-blur-md border border-white/80 shadow-sm mt-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-slate-400 font-bold hover:text-[#202042] transition-colors"
+          className="flex items-center gap-3 text-slate-400 font-bold hover:text-[#202042] transition-all group"
         >
-          <ArrowLeft size={20} /> Retour
+          <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+            <ArrowLeft size={18} />
+          </div>
+          <span className="text-sm hidden sm:inline">Retour aux boutiques</span>
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-[#3498DB] text-white px-6 py-3 rounded-2xl font-black text-xs uppercase flex items-center gap-2 shadow-lg hover:shadow-blue-200 hover:-translate-y-0.5 transition-all active:scale-95"
+            onClick={() => setIsSaleModalOpen(true)}
+            className="flex-1 md:flex-none bg-blue-600 text-white px-6 lg:px-10 py-4 rounded-[20px] lg:rounded-[24px] font-black text-[11px] uppercase tracking-wider flex items-center justify-center gap-3 shadow-xl shadow-blue-100 active:scale-95 transition-all"
           >
-            <Plus size={18} /> Nouvelle Vente
+            <Plus size={18} strokeWidth={3} />
+            <span>Nouvelle Vente</span>
           </button>
         </div>
       </div>
 
-      {/* Barre d'Onglets Style Moderne */}
-      <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-[22px] w-fit border border-slate-100">
-        <button
-          onClick={() => handleTabChange("dashboard")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-            activeTab === "dashboard"
-              ? "bg-white text-[#202042] shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <LayoutDashboard size={18} /> Vue d'ensemble
-        </button>
-
-        <button
-          onClick={() => handleTabChange("sales")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-            activeTab === "sales"
-              ? "bg-white text-[#202042] shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <ShoppingBag size={18} /> Historique Ventes
-        </button>
-
-        <button
-          onClick={() => handleTabChange("payments")}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
-            activeTab === "payments"
-              ? "bg-white text-[#202042] shadow-sm"
-              : "text-slate-400 hover:text-slate-600"
-          }`}
-        >
-          <Receipt size={18} /> Versements
-        </button>
+      {/* Barre d'onglets défilable sur Mobile */}
+      <div className="overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
+        <div className="flex items-center gap-2 bg-white/80 backdrop-blur-md p-1.5 rounded-[22px] lg:rounded-[28px] w-max lg:w-fit border border-slate-100 shadow-sm">
+          {[
+            { id: "dashboard", label: "Vue d'ensemble", icon: LayoutDashboard },
+            { id: "sales", label: "Historique", icon: ShoppingBag },
+            { id: "payments_store", label: "Caisse", icon: Wallet },
+            { id: "payments_clients", label: "Clients", icon: Users },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center gap-2.5 px-5 py-3 lg:px-6 lg:py-3.5 rounded-[18px] lg:rounded-[20px] font-bold text-[12px] lg:text-sm whitespace-nowrap transition-all ${
+                activeTab === tab.id
+                  ? "bg-[#202042] text-white shadow-lg scale-100 lg:scale-105"
+                  : "text-slate-400 hover:bg-slate-50"
+              }`}
+            >
+              <tab.icon
+                size={16}
+                strokeWidth={activeTab === tab.id ? 2.5 : 2}
+              />
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <hr className="border-slate-100" />
-
-      {/* Rendu Conditionnel avec animations */}
+      {/* Zone de Contenu Dynamique */}
       <div className="min-h-[500px]">
         {activeTab === "dashboard" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="lg:col-span-2 space-y-8">
-              {/* Correction majeure : Passage du salePointId et de la refreshKey */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Colonne Gauche : Stats & Mouvements */}
+            <div className="lg:col-span-2 space-y-6 lg:space-y-8 order-2 lg:order-1">
               <SalesStats salePointId={id} key={`stats-${refreshKey}`} />
               <StockMovement movements={data?.history} />
             </div>
-            <div className="space-y-8">
+
+            {/* Colonne Droite : Argent & Top Produits */}
+            <div className="space-y-6 lg:space-y-8 order-1 lg:order-2">
               <FinancialSummary
                 solde={data?.solde}
+                impayer={data?.impayer}
                 secondaryStore={data?.secondaryStore}
               />
+              {/* Masqué sur tout petit écran si besoin, ou affiché après les finances */}
               <TopProducts products={data?.secondaryStore?.items} />
             </div>
           </div>
         )}
 
         {activeTab === "sales" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="animate-in slide-in-from-right-4 duration-300 px-1">
             <VenteDetails salePointId={id} />
           </div>
         )}
 
-        {activeTab === "payments" && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === "payments_store" && (
+          <div className="animate-in slide-in-from-right-4 duration-300 px-1">
             <VersementDetail salePointId={id} />
+          </div>
+        )}
+
+        {activeTab === "payments_clients" && (
+          <div className="animate-in slide-in-from-right-4 duration-300 px-1">
+            <VersementClientList
+              salePointId={id}
+              onPaymentAction={openPaymentModal}
+            />
           </div>
         )}
       </div>
 
-      {/* Modal de vente */}
-      <SaleModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        salePointId={id}
-        refreshData={fetchDetails} // Cette fonction mettra à jour data + refreshKey
-      />
+      {/* --- MODALS VIA PORTALS --- */}
+      {isSaleModalOpen &&
+        createPortal(
+          <SaleModal
+            isOpen={isSaleModalOpen}
+            onClose={() => setIsSaleModalOpen(false)}
+            salePointId={id}
+            refreshData={fetchDetails}
+          />,
+          document.body,
+        )}
+
+      {isVersementModalOpen &&
+        createPortal(
+          <AddVersementClient
+            isOpen={isVersementModalOpen}
+            onClose={() => {
+              setIsVersementModalOpen(false);
+              setSelectedClient(null);
+            }}
+            client={selectedClient}
+            salePointId={id}
+            onSuccess={() => {
+              fetchDetails();
+              setRefreshKey((prev) => prev + 1);
+            }}
+          />,
+          document.body,
+        )}
     </div>
   );
 };

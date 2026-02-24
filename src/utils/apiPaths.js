@@ -153,4 +153,14 @@ export const API_PATHS = {
   DASHBOARD: {
     GET_STATS: "/dashboard/stats", // Appellera GET /api/dashboard/stats
   },
+
+  VERSEMENTS_CLIENTS: {
+    GET_ALL: "/versements-clients",
+    GET_ONE: "/versements-clients/:id",
+    GET_BY_STORE: "/versements-clients/store/:storeId",
+    GET_STATEMENT: "/versements-clients/statement/:clientId",
+    CREATE: "/versements-clients", // Correspondra à axios.post('/versements-clients')
+    UPDATE: "/versements-clients/:id",
+    DELETE: "/versements-clients/:id",
+  },
 };
