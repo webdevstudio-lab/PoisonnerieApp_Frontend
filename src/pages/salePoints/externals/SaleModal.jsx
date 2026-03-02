@@ -45,7 +45,6 @@ const SaleModal = ({ isOpen, onClose, refreshData, salePointId }) => {
           setStore(storeRes.data.data);
           setClients(clientsRes.data.data || []);
         } catch (err) {
-          console.error(err);
           toast.error("Erreur de chargement des données");
         } finally {
           setFetchingData(false);
@@ -114,7 +113,7 @@ const SaleModal = ({ isOpen, onClose, refreshData, salePointId }) => {
       refreshData();
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Erreur", { id: tid });
+      toast.error(err.message || "Erreur", { id: tid });
     } finally {
       setLoading(false);
     }

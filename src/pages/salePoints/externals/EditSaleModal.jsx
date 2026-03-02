@@ -104,9 +104,7 @@ const EditSaleModal = ({
       refreshData();
       onClose();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Erreur lors de la mise à jour",
-      );
+      toast.error(err.message || "Erreur lors de la mise à jour");
     } finally {
       setLoading(false);
     }
